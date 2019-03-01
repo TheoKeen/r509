@@ -1,0 +1,16 @@
+---
+test_ca:
+  ca_cert:
+      cert: bin/certs/rootca.pem
+      engine: 
+        :so_path: /usr/lib/x86_64-linux-gnu/engines-1.1/pkcs11.so
+        :id: pkcs11
+        :pin: "123456"
+        :module_path: /usr/lib/x86_64-linux-gnu/opensc-pkcs11.so
+      key_name: "pkcs11:model=PKCS%2315%20emulated;manufacturer=ZeitControl;serial=0005000023bd;token=User%20PIN%20%28sig%29%20%28OpenPGP%20card%29;id=%01;object=Signature%20key;type=private"
+  csp_start_skew_seconds: 3600
+  ocsp_validity_hours: 168
+  crl_start_skew_seconds: 3600
+  crl_validity_hours: 162
+  crl_md: SHA256
+

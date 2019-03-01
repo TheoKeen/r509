@@ -33,7 +33,10 @@ module R509
       @engines[hash[:id]] = OpenSSL::Engine.by_id("dynamic") do |e|
         e.ctrl_cmd("SO_PATH", hash[:so_path])
         e.ctrl_cmd("ID", hash[:id])
+        e.ctrl_cmd("LIST_ADD","1")
         e.ctrl_cmd("LOAD")
+        e.ctrl_cmd("PIN", hash[:pin])
+        e.ctrl_cmd("MODULE_PATH", hash[:module_path])
       end
     end
 
