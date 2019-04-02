@@ -43,7 +43,7 @@ class SignatureLogger
 
     def currentsignature
       if softhsmused() && @@currentsignature = 0
-          @@currentsignature =  @@signaturelist.first.signaturenr
+          @@currentsignature =  @@signaturelist.first.signaturenr if  @@signaturelist.first
       end
       return @@currentsignature
     end
@@ -64,6 +64,7 @@ class SignatureLogger
       unless dirlist.nil?
         dirlist.each do |filename|
           xmldoc = Nokogiri::XML(File.open(filename))
+          ValidateSignature(xmldoc)
           xmlnode = xmldoc.at_xpath("//date")
           signaturedate =  xmlnode.text if xmlnode
           xmlnode = xmldoc.at_xpath("//SignatureCounter")
@@ -79,6 +80,13 @@ class SignatureLogger
       end
     end
 
+    def ValidateSignature(xmldoc)
+      signed_xml = Xmldsig::SignedDocument.new(xmldoc.to_xml)
+      signature = signed_xml.signatures[0]
+      blob = signature.valid?(@ca.ca_cert)
+      puts blob.to_s
+    end
+
     def softhsmused
       #Retrieving softhsm is not working (easily.. skipping)
      return true
@@ -92,6 +100,7 @@ class SignatureLogger
     end
 
     def logsignature(signedobject)
+      mysubject = @ca.ca_cert.subject
         builder = Nokogiri::XML::Builder.new do |xml|
             xml.root {
               xml.CASignOperation {
@@ -115,7 +124,9 @@ class SignatureLogger
                 }#xml.SignedInfo
               xml.SignatureValue
               xml.KeyInfo{
-                xml.X509Data
+                xml.X509Data {
+                  xml.X509SubjectName mysubject
+                 }
               }
               } #xml.Signature
             }
