@@ -64,7 +64,7 @@ module R509
       include R509::IOHelpers
       extend R509::IOHelpers
       attr_reader :ca_cert, :crl_validity_hours, :crl_start_skew_seconds,
-                  :crl_number_file, :crl_list_file, :crl_md, :ocsp_chain,
+                  :crl_number_file, :crl_list_file, :crl_md, :logdir, :ocsp_chain,
                   :ocsp_start_skew_seconds, :ocsp_validity_hours
 
       # Default number of seconds to subtract from now when calculating the signing time of an OCSP response
@@ -95,7 +95,8 @@ module R509
       # @option opts [Integer] :ocsp_start_skew_seconds The number of seconds to subtract from Time.now when calculating the signing time of an OCSP response. This is important to handle bad user clocks.
       # @option opts [Integer] :crl_validity_hours Number of hours CRLs should be valid for
       # @option opts [Integer] :crl_start_skew_seconds The number of seconds to subtract from Time.now when calculating the signing time of a CRL. This is important to handle bad user clocks.
-      #
+      # @option opts [String] :logdir Directory where logiles will reside. 
+
       def initialize(opts = {})
         unless opts.key?(:ca_cert)
           raise ArgumentError, 'Config object requires that you pass :ca_cert'
@@ -163,6 +164,7 @@ module R509
         hash["crl_list_file"] = @crl_list_file unless @crl_list_file.nil?
         hash["crl_number_file"] = @crl_number_file unless @crl_number_file.nil?
         hash["crl_md"] = @crl_md
+        hash["logdir"] = @logdir
         hash["profiles"] = @profiles.merge(@profiles) { |_k, v| v.to_h } unless @profiles.empty?
         hash
       end
@@ -209,6 +211,7 @@ module R509
           :crl_validity_hours => conf['crl_validity_hours'],
           :ocsp_validity_hours => conf['ocsp_validity_hours'],
           :ocsp_start_skew_seconds => conf['ocsp_start_skew_seconds'],
+          :logdir => conf['logdir'],
           :crl_md => conf['crl_md']
         }
 
@@ -295,6 +298,7 @@ module R509
         @crl_start_skew_seconds = opts[:crl_start_skew_seconds] || DEFAULT_CRL_START_SKEW_SECONDS
         @crl_number_file = opts[:crl_number_file] || nil
         @crl_list_file = opts[:crl_list_file] || nil
+        @logdir = opts[:logdir] #|| FileUtils.getwd
         @crl_md = opts[:crl_md] || R509::MessageDigest::DEFAULT_MD
       end
 

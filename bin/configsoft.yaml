@@ -1,0 +1,17 @@
+---
+test_ca:
+  ca_cert:
+      cert: bin/certs/rootcasoft.pem
+      engine: 
+        :so_path: c:/dev/bin/pkcs11.dll
+        :id: pkcs11
+        :pin: "123456"
+        :module_path: c:/dev/SoftHSM2/lib/softhsm2-x64.dll
+      key_name: "pkcs11:model=SoftHSM%20v2;manufacturer=SoftHSM%20project;serial=c13db240b071fa33;token=R509SoftTest"
+  csp_start_skew_seconds: 3600
+  ocsp_validity_hours: 168
+  crl_start_skew_seconds: 3600
+  crl_validity_hours: 162
+  crl_md: SHA256
+  logdir: c:/dev/log/
+
