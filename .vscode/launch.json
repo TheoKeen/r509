@@ -8,8 +8,10 @@
             "name": "Debug Local File",
             "type": "Ruby",
             "request": "launch",
-            "env": {"RUBYLIB":"${workspaceRoot}\\;${workspaceRoot}\\lib"},
+            "env": {"RUBYLIB":"${workspaceRoot}/:${workspaceRoot}/lib"},
+            //"env": {"RUBYLIB":"${workspaceRoot}\\;${workspaceRoot}\\lib"},
             "program": "${workspaceRoot}/bin/OpenPGP.rb"
+            //"program": "${workspaceRoot}/bin/r509"
         }
     ]
 }

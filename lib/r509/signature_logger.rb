@@ -5,52 +5,51 @@ require 'xmldsig'
 
 module R509
 
-    def foo2
-        puts "foo"
-      end
-      module_function :foo2
+class SignatureListItem
+  attr_accessor :signaturenr, :filename, :x509subjectname, :signaturedate
+
+  def initialize(signaturenr, filename, x509subjectname, signaturedate)
+    @signaturenr = signaturenr
+    @filename   = filename
+    @x509subjectname = x509subjectname
+    @signaturedate = signaturedate
+  end
+  
+
+end
 
 class SignatureLogger
-
+  @@signaturelist
   @@currentsignature = 0
 
     def initialize(ca)
         @ca = ca
+        @@signaturelist = GetSignatureList()
         currentsignature()
+        PrintLastSignatures(3)
+        puts "init logger done."
       end
   
+    def PrintLastSignatures(limit)
+      unless @@signaturelist.nil?
+        if limit.to_i > @@signaturelist.count 
+          limit = @@signaturelist.count
+        end
+        for counter in 0..(limit -1)
+          puts @@signaturelist[counter].signaturenr.to_s.rjust(3, "0") + " | " + @@signaturelist[counter].signaturedate  + " | " +  @@signaturelist[counter].x509subjectname
+        end
+      end
+    end
+
     def currentsignature
       if softhsmused() && @@currentsignature = 0
-          @@currentsignature = lastsignaturefromlogs
+          @@currentsignature =  @@signaturelist.first.signaturenr
       end
       return @@currentsignature
     end
 
-    def signaturenr_fromfilename(filename)
-      filename.slice! @ca.logdir + @ca.ca_cert.fingerprint('sha1') + "_"
-      filename.slice! ".xml"
-      return filename
-    end
-
     def filename_fromsignaturenr(signaturenr)
       @ca.logdir + @ca.ca_cert.fingerprint('sha1') + "_" + signaturenr.to_s + ".xml"
-    end
-
-    def lastsignaturefromlogs
-      lastsignature=0
-      tmplist = listlogs
-      if tmplist.nil?
-        lastsignature = 0
-      else
-        dirlist = []
-        tmplist.each do |filename|
-          dirlist.push(signaturenr_fromfilename(filename).to_i)
-        end
-        dirlist.sort!
-        lastsignature = dirlist.last
-      end
-      
-      return lastsignature 
     end
 
     def listlogs
@@ -58,18 +57,31 @@ class SignatureLogger
       Dir[filter].sort
     end
 
+    def GetSignatureList
+      dirlist = listlogs
+      signaturelist = []
+
+      unless dirlist.nil?
+        dirlist.each do |filename|
+          xmldoc = Nokogiri::XML(File.open(filename))
+          xmlnode = xmldoc.at_xpath("//date")
+          signaturedate =  xmlnode.text if xmlnode
+          xmlnode = xmldoc.at_xpath("//SignatureCounter")
+          signaturecounterinxml = xmlnode.text if xmlnode
+          xmlnode = xmldoc.at_xpath("//X509SubjectName")
+          x509subjectname = xmlnode.text if xmlnode
+          listitem = SignatureListItem.new(signaturecounterinxml.to_i, filename, x509subjectname, signaturedate)
+          signaturelist.push(listitem)
+        end
+        signaturelist = signaturelist.sort_by { |a| [ a.signaturenr] }.reverse 
+        return signaturelist
+  
+      end
+    end
+
     def softhsmused
-
       #Retrieving softhsm is not working (easily.. skipping)
- 
      return true
-      #keyname = @ca.ca_cert.key.key_name
-      #retval = false
-
-      #if "SoftHSM".to_s.in? "bla"
-      #  retval = true
-      #end
-      #return retval
     end
 
     def checkcurrentsignature
@@ -111,20 +123,18 @@ class SignatureLogger
           unsigned_document = Xmldsig::SignedDocument.new(builder.to_xml)
           signed_xml = unsigned_document.sign(@ca.ca_cert.key.key)
 
-          File.write(filename_fromsignaturenr(@@currentsignature), signed_xml)
-        
+          File.write(filename_fromsignaturenr(@@currentsignature), signed_xml)        
     end
 
     private
-    def addx509data(signedobject, xml)
-      puts signedobject.class
 
+    def addx509data(signedobject, xml)
       case signedobject
       when R509::Cert
         addx509cert(signedobject, xml)
-      when R509::CSR
-        puts "TODO"
       when R509::SignedList
+        puts "TODO"
+      when R509::CSR
         puts "TODO"
       end
     end
@@ -136,7 +146,6 @@ class SignatureLogger
        }
       return xml
     end
-
 
 end
 

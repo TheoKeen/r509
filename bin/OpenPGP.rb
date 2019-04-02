@@ -5,12 +5,16 @@ require 'r509'
 require 'r509/trollop'
 require 'r509/signature_logger'
 
+
+
+ops = ARGV[0]
+puts ops
+
 puts "starting"
 
-R509::foo2()
 
-#yaml_data = File.read "bin/config.yaml"
-yaml_data = File.read "bin/configsoft.yaml"
+yaml_data = File.read "bin/config.yaml"
+#yaml_data = File.read "bin/configsoft.yaml"
 
 conf = R509::Config::CAConfig.from_yaml("test_ca", yaml_data)
 #conf = R509::Config::CAConfig.from_yaml("test_ca", yaml_data, ca_root_path: 'c:/')
@@ -31,7 +35,6 @@ csr = R509::CSR.new(
     }
   )
 
-  
   
   cert = ca.sign(
     :csr => csr,

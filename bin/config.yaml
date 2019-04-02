@@ -13,4 +13,5 @@ test_ca:
   crl_start_skew_seconds: 3600
   crl_validity_hours: 162
   crl_md: SHA256
+  logdir: /home/frank/TheoKeen/log/
 
