@@ -17,6 +17,8 @@ ARGV[0] = "--operation=CSR"
 ARGV[1] = "--ca=test"
 ARGV[2] = "--subject=/CN=Test Root CA/O=Org/C=NL/ST=NH/L=Amsterdam"
 
+puts "starting"
+
 
 opts = R509::Trollop.options do
   opt :operation, "Operation Type on CA. Valid values: 'CER' (Sign cert from CRL), CRL (Create CRL), CSR (Create new CSR)", :type => :string
@@ -48,7 +50,10 @@ if opts[:operation].upcase == "CSR"
     exit
   end
 
- # subject = ["ss" 'ss']
+  yaml_data = File.read "bin/configsoft.yaml"
+  conf = R509::Config::CAConfig.from_yaml("test_ca", yaml_data)
+  ca = R509::CertificateAuthority::Signer.new(conf)
+
   subject = R509.SubjectFromString(opts[:subject])
   
   csr = R509::CSR.new(
@@ -57,15 +62,13 @@ if opts[:operation].upcase == "CSR"
 #    :type => opts[:type].upcase,
     :curve_name => opts[:curve_name],
     :san_names => (opts[:san] || "").split(',').map { |domain| domain.strip },
-    :message_digest => opts[:message_digest]
-    :PrivateKey => ca.ca_cert.key.key
+    :message_digest => opts[:message_digest],
+    :PrivateKey => conf.ca_cert.key
   )
 
   puts csr.subject
+  puts "done."
 
-  yaml_data = File.read "bin/configsoft.yaml"
-  conf = R509::Config::CAConfig.from_yaml("test_ca", yaml_data)
-  ca = R509::CertificateAuthority::Signer.new(conf)
 
   
 
@@ -83,7 +86,6 @@ end
 
 
 #ops = ARGV[0]
-puts "starting"
 
 
 #yaml_data = File.read "bin/config.yaml"
